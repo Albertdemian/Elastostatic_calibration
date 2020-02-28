@@ -61,7 +61,7 @@ Jth3 = Jth(transmission, deflections,'J3');
 Jth_t = [Jth1 Jth2 Jth3];
 
 %calculating detla_t 
-dt = Jth_t * inv(K) * Jth_t' * W;
+dt = Jth_t * inv(K) * Jth_t' * W + normrnd(0,1e-5); %adding random noise to the calculated deflection
 
 %appending delta_t in array
 DTs(:,i) = dt;
@@ -107,30 +107,32 @@ for i = 1:length(t)
     Jth_t = [Jth1 Jth2 Jth3];
 
     %calculating detla_t 
-    dt  = Jth_t * inv(K) * Jth_t' * W;
-    dt_uncalib = Jth_t * inv(stiffness) * Jth_t' * W;
+    
+    dt_uncalib = Jth_t * inv(stiffness) * Jth_t' * W + normrnd(0,1e-5);
     
     uncalib_pose = pose+dt_uncalib(1:3);
     
     %appending delta_t in array
-    DTs_1(:,i) = dt;
+    
     DTs_uncal(:,i) = dt_uncalib;
     
-    new_poses(:,i) = pose+ dt(1:3);
+    
     uncalib_poses(:,i) = uncalib_pose;
     
 end
 
 %compensation 
 difference = [x;y;z]' - uncalib_poses';
-calibrated = new_poses + difference'
+calibrated = [x;y;z] + difference';
 
 figure('name','deflection')
 plot3(x,y,z,'--r','LineWidth',2)
+
 grid on
 hold on
-plot3(uncalib_poses(1,:),uncalib_poses(2,:),uncalib_poses(3,:), '--k')
-plot3(calibrated(1,:),calibrated(2,:),calibrated(3,:), '-b')
+scatter3(uncalib_poses(1,:),uncalib_poses(2,:),uncalib_poses(3,:), 'k')
+
+scatter3(calibrated(1,:),calibrated(2,:),calibrated(3,:), 'b')
 xlabel('x')
 ylabel('y')
 zlabel('z')
